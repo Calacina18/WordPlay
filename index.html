@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo</title>
+</head>
+<style>
+body {
+  background: #121213;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+
+/* CONTROLES */
+select, input, button {
+  padding: 8px;
+  margin: 5px;
+}
+
+/* TABULEIRO */
+#tabuleiro {
+  display: grid;
+  gap: 8px;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.linha {
+  display: grid;
+  gap: 5px;
+  justify-content: center;
+}
+
+.letra {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #3a3a3c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* CORES */
+.correta { background: #538d4e; }
+.lugarErrado { background: #b59f3b; }
+.errada { background: #3a3a3c; }
+
+/* TECLADO */
+#teclado {
+  margin-top: 10px;
+}
+#teclado button {
+  margin: 2px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* TIMER */
+#timer {
+  font-size: 20px;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Adivinhe</h1>
+
+<select id="tema">
+  <option value="personagens">Personagens</option>
+  <option value="jogos">Jogos</option>
+  <option value="animes">Animes</option>
+</select>
+
+<select id="dificuldade">
+  <option value="600">Fácil (10 min)</option>
+  <option value="300">Difícil (5 min)</option>
+</select>
+
+<button onclick="iniciarJogo()">Iniciar</button>
+
+<p id="dica"></p>
+<p id="timer"></p>
+
+<div id="tabuleiro"></div>
+
+<input type="text" id="entrada">
+<button onclick="enviar()">Enviar</button>
+
+<div id="teclado"></div>
+
+<p>Pontos: <span id="pontos">0</span></p>
+
+<input type="text" id="nome" placeholder="Seu nome">
+<button onclick="salvarRanking()">Salvar Ranking</button>
+
+<ul id="ranking"></ul>
+
+<p id="mensagem"></p>
+
+<audio id="somAcerto" src=""></audio>
+<audio id="somErro" src=""></audio>
+
+<script>
+const temas = {
+  personagens: [
+{ palavra: "NARUTO", dica: "7 hokage" },
+{ palavra: "SASUKE", dica: "chidore" },
+{ palavra: "KAKASHI", dica: "kamui" },
+{ palavra: "ITACHI", dica: "Ninja renegado" },
+{ palavra: "GAARA", dica: "Areia" },
+{ palavra: "Neji", dica: "Byakugan" },
+{ palavra: "OROCHIMARU", dica: "Cobra" },
+{ palavra: "JIRAIYA", dica: "Sannin" },
+{ palavra: "GOKU", dica: "Saiyajin" },
+{ palavra: "VEGETA", dica: "pricipe Orgulhoso" },
+{ palavra: "GOHAN", dica: "Arroz" },
+{ palavra: "PICCOLO", dica: "Namekusei" },
+{ palavra: "FREEZA", dica: "lagarto vilaõ" },
+{ palavra: "CELL", dica: "Androide perfeito" },
+{ palavra: "MAJINBUU", dica: "Gordo rosa" },
+{ palavra: "TRUNKS", dica: "sayajin com espada" },
+{ palavra: "LUFFY", dica: "Borracha" },
+{ palavra: "ZORO", dica: "santoryu" },
+{ palavra: "SANJI", dica: "Cozinheiro" },
+{ palavra: "USOPP", dica: "Narigudo" },
+{ palavra: "CHOPPER", dica: "Medico" },
+{ palavra: "FRANKY", dica: "Cyborg" },
+{ palavra: "BROOK", dica: "Esqueleto" },
+{ palavra: "JINBE", dica: "Peixe" },
+{ palavra: "THORFINN", dica: "Viking" },
+{ palavra: "THORS", dica: "Trol viking" },
+{ palavra: "ASKELADD", dica: "Artorios" },
+{ palavra: "GUMBALL", dica: "Gato azul" },
+{ palavra: "DARWIN", dica: "Peixe com pernas" },
+{ palavra: "ANAIS", dica: "Genio coelho" },
+{ palavra: "NICOLE", dica: "gata azul" },
+{ palavra: "RICHARD", dica: "coelho rosa" },
+{ palavra: "ALAN", dica: "Balao" },
+{ palavra: "MARIO", dica: "Encanador" },
+{ palavra: "LUIGI", dica: "encanador verde" },
+{ palavra: "TOAD", dica: "Cogumelo" },
+{ palavra: "YOSHI", dica: "Dinossauro" },
+{ palavra: "STEVEN", dica: "Diamante rosa" },
+{ palavra: "GARNET", dica: "Feita de amor" },
+{ palavra: "PEARL", dica: "Ajudante da diamante" },
+{ palavra: "LAPIS", dica: "Gem da Agua" },
+{ palavra: "TAKEMICHI", dica: "Viagante do tempo" },
+{ palavra: "MIKEY", dica: "Lider da manji" },
+{ palavra: "DRAKEN", dica: "tatuagem de dragão" },
+{ palavra: "KRATOS", dica: "deus" },
+{ palavra: "THOR", dica: "Martelo" },
+{ palavra: "SCORPION", dica: "Fogo" },
+{ palavra: "SUBZERO", dica: "Gelo" },
+{ palavra: "RAIDEN", dica: "Raio" },
+{ palavra: "LIUKANG", dica: "kung fu" },
+{ palavra: "KITANA", dica: "Leques" },
+{ palavra: "KUNGLAO", dica: "Chapeu" },
+{ palavra: "JAX", dica: "Bracos de ferro" },
+{ palavra: "SHANGTSUNG", dica: "Almas" },
+{ palavra: "SUPERMAN", dica: "kriptonita" },
+{ palavra: "BATMAN", dica: "Cavaleiro das trevas" },
+{ palavra: "FLASH", dica: "Velocidade" },
+{ palavra: "AQUAMAN", dica: "Oceano" },
+{ palavra: "CYBORG", dica: "Tecnologia" },
+{ palavra: "LANTERNAVERDE", dica: "Anel" },
+{ palavra: "SPIDERMAN", dica: "Aranha" },
+{ palavra: "IRONMAN", dica: "Armadura" },
+{ palavra: "CAPTAOAMERICA", dica: "Escudo" },
+{ palavra: "HULK", dica: "verde" },
+{ palavra: "WOLVERINE", dica: "Garras" },
+{ palavra: "DEADPOOL", dica: "jesus da marvel" },
+{ palavra: "THANOS", dica: "Manopla" },
+{ palavra: "PIKACHU", dica: "Eletrico" },
+{ palavra: "CHARIZARD", dica: "dagrão de fogo" },
+{ palavra: "BULBASAUR", dica: "Planta" },
+{ palavra: "SQUIRTLE", dica: "Agua" },
+{ palavra: "MEWTWO", dica: "Psiquico" },
+{ palavra: "Mago", dica: "Bola de fogo" },
+{ palavra: "Corredor", dica: "Porco e marreta" },
+{ palavra: "CARLJHHNSON", dica: "grove" },
+  ],
+  jogos: [
+   { palavra: "MINECRAFT", dica: "Blocos" },
+{ palavra: "FORTNITE", dica: "BattleRoyale" },
+{ palavra: "MARIOKART", dica: "Corrida" },
+{ palavra: "GTA", dica: "Crime" },
+{ palavra: "REDDEAD", dica: "Velhooeste" },
+{ palavra: "FIFA", dica: "Futebol" },
+{ palavra: "PES", dica: "Futebol" },
+{ palavra: "CALLDUTY", dica: "Guerra" },
+{ palavra: "BATTLEFIELD", dica: "HISTORIA DE GUERRA" },
+{ palavra: "CSGO", dica: "Tiro" },
+{ palavra: "HALO", dica: "Espaco" },
+{ palavra: "DOOM", dica: "Demons" },
+{ palavra: "QUAKE", dica: "Arena" },
+{ palavra: "STREETFIGHTER", dica: "Luta" },
+{ palavra: "MORTALKOMBAT", dica: "Fatality" },
+{ palavra: "TEKKEN", dica: "Luta" },
+{ palavra: "DARKSOULS", dica: "Dificil" },
+{ palavra: "ELDENRING", dica: "Mundoaberto" },
+{ palavra: "SEKIRO", dica: "Samurai" },
+{ palavra: "DIABLO", dica: "Inferno" },
+{ palavra: "STARCRAFT", dica: "Estrategia" },
+{ palavra: "WARCRAFT", dica: "Fantasia" },
+{ palavra: "HEARTHSTONE", dica: "Cartas" },
+{ palavra: "CLASHROYAL", dica: "Cartas" },
+{ palavra: "CLASHOFCLANS", dica: "Vilarejo" },
+{ palavra: "AMONGUS", dica: "Impostor" },
+{ palavra: "FALLOUT", dica: "Pos apocalipse" },
+{ palavra: "SKYRIM", dica: "Dragao" },
+{ palavra: "THEWITCHER", dica: "Bruxo" },
+{ palavra: "CYBERPUNK", dica: "Futuro" },
+{ palavra: "ASSASSINSCREED", dica: "Assassino" },
+{ palavra: "FARCRY", dica: "sobrevivencia" },
+{ palavra: "WATCHDOGS", dica: "Hackers" },
+{ palavra: "FORZA", dica: "Carros" },
+{ palavra: "DESTINY", dica: "Loot" },
+  ],
+  animes: [
+    { palavra: "NARUTO", dica: "Ninja" },
+{ palavra: "ONEPIECE", dica: "Piratas" },
+{ palavra: "BLEACH", dica: "Shinigami" },
+{ palavra: "DRAGONBALL", dica: "Saiyajin" },
+{ palavra: "ATTACKONTITAN", dica: "Muralhas" },
+{ palavra: "DEATHNOTE", dica: "Caderno" },
+{ palavra: "FULLMETALALCHEMIST", dica: "Alquimia" },
+{ palavra: "HUNTERXHUNTER", dica: "Cacadores" },
+{ palavra: "DEMONSLAYER", dica: "Demonios" },
+{ palavra: "JUJUTSUKAISEN", dica: "Maldições" },
+{ palavra: "BLACKCLOVER", dica: "Magia" },
+{ palavra: "NANATSUNOTAIZAI", dica: "Pecados" },
+{ palavra: "SWORDARTONLINE", dica: "Jogo" },
+{ palavra: "TOKYOGHOUL", dica: "Monstros" },
+{ palavra: "STEINSGATE", dica: "Tempo" },
+{ palavra: "AKAMEGAKILL", dica: "Assassinos" },
+{ palavra: "BLUELOCK", dica: "Futebol" },
+{ palavra: "HAIKYUU", dica: "Volei" },
+{ palavra: "CHAINSAWMAN", dica: "Demons" },
+{ palavra: "VINLANDSAGA", dica: "Vikings" },
+{ palavra: "BERSERK", dica: "Sombrio" },
+{ palavra: "YOURNAME", dica: "romance" },
+{ palavra: "PARASYTE", dica: "Parasitas" },
+{ palavra: "ERASED", dica: "Passado" },
+{ palavra: "MONSTER", dica: "Serialkiller" },
+{ palavra: "PSYCHOPASS", dica: "Futuro" },
+{ palavra: "COWBOYBEBOP", dica: "Cacadores" },
+  ]
+};
+
+let palavraSecreta, dicaAtual;
+let tentativa = 0;
+let pontos = 0;
+let streak = 0;
+let tamanhoPalavra = 0;
+let tempo = 0;
+let intervalo;
+let jogoAtivo = true;
+let usadas = [];
+
+const maxTentativas = 6;
+
+const tabuleiro = document.getElementById("tabuleiro");
+const entrada = document.getElementById("entrada");
+
+function tocar(id) {
+  const som = document.getElementById(id);
+  som.currentTime = 0;
+  som.play();
+}
+
+function iniciarTimer(segundos) {
+  clearInterval(intervalo);
+  tempo = segundos;
+
+  intervalo = setInterval(() => {
+    let m = Math.floor(tempo / 60);
+    let s = tempo % 60;
+
+    document.getElementById("timer").textContent =
+      `⏱️ ${m}:${s.toString().padStart(2, '0')}`;
+
+    tempo--;
+
+    if (tempo < 0) {
+      jogoAtivo = false;
+      clearInterval(intervalo);
+      document.getElementById("mensagem").textContent = "⏰ Tempo esgotado!";
+    }
+  }, 1000);
+}
+
+function iniciarJogo() {
+  pontos = parseInt(localStorage.getItem("pontos")) || 0;
+  document.getElementById("pontos").textContent = pontos;
+
+  jogoAtivo = true;
+  tentativa = 0;
+
+  const dificuldade = parseInt(document.getElementById("dificuldade").value);
+  iniciarTimer(dificuldade);
+
+  novaRodada();
+  criarTeclado();
+  mostrarRanking();
+}
+
+function novaRodada() {
+  const temaSelecionado = document.getElementById("tema").value;
+  const lista = temas[temaSelecionado];
+
+  if (usadas.length === lista.length) usadas = [];
+
+  let sorteado;
+  do {
+    sorteado = lista[Math.floor(Math.random() * lista.length)];
+  } while (usadas.includes(sorteado.palavra));
+
+  usadas.push(sorteado.palavra);
+
+  palavraSecreta = sorteado.palavra;
+  dicaAtual = sorteado.dica;
+  tamanhoPalavra = palavraSecreta.length;
+  tentativa = 0;
+
+  entrada.maxLength = tamanhoPalavra;
+  entrada.value = "";
+  entrada.focus();
+
+  document.getElementById("dica").textContent = "💡 " + dicaAtual;
+  document.getElementById("mensagem").textContent = "";
+
+  criarTabuleiro();
+}
+
+function criarTabuleiro() {
+  tabuleiro.innerHTML = "";
+
+  for (let i = 0; i < maxTentativas; i++) {
+    let linha = document.createElement("div");
+    linha.classList.add("linha");
+    linha.style.gridTemplateColumns = `repeat(${tamanhoPalavra}, 50px)`;
+
+    for (let j = 0; j < tamanhoPalavra; j++) {
+      let letra = document.createElement("div");
+      letra.classList.add("letra");
+      linha.appendChild(letra);
+    }
+
+    tabuleiro.appendChild(linha);
+  }
+}
+
+function enviar() {
+  if (!jogoAtivo) return;
+
+  let palpite = entrada.value.toUpperCase();
+
+  if (palpite.length !== tamanhoPalavra) return;
+
+  let linha = tabuleiro.children[tentativa].children;
+
+  let segredo = palavraSecreta.split("");
+  let palpiteArr = palpite.split("");
+
+  for (let i = 0; i < tamanhoPalavra; i++) {
+    linha[i].textContent = palpite[i];
+
+    if (palpiteArr[i] === segredo[i]) {
+      linha[i].classList.add("correta");
+      segredo[i] = null;
+      palpiteArr[i] = null;
+    }
+  }
+
+  for (let i = 0; i < tamanhoPalavra; i++) {
+    if (palpiteArr[i]) {
+      if (segredo.includes(palpiteArr[i])) {
+        linha[i].classList.add("lugarErrado");
+        segredo[segredo.indexOf(palpiteArr[i])] = null;
+      } else {
+        linha[i].classList.add("errada");
+      }
+    }
+  }
+
+  if (palpite === palavraSecreta) {
+    tocar("somAcerto");
+
+    streak++;
+    pontos += 10 * streak;
+
+    localStorage.setItem("pontos", pontos);
+    document.getElementById("pontos").textContent = pontos;
+
+    jogoAtivo = false;
+
+    setTimeout(() => {
+      jogoAtivo = true;
+      novaRodada();
+    }, 800);
+
+    return;
+  }
+
+  tentativa++;
+
+  if (tentativa === maxTentativas) {
+    tocar("somErro");
+    streak = 0;
+    jogoAtivo = false;
+    document.getElementById("mensagem").textContent =
+      "❌ Você perdeu! Palavra: " + palavraSecreta;
+  }
+
+  entrada.value = "";
+  entrada.focus();
+}
+
+function criarTeclado() {
+  const teclado = document.getElementById("teclado");
+  teclado.innerHTML = "";
+
+  const letras = "QWERTYUIOPASDFGHJKLZXCVBNM";
+
+  letras.split("").forEach(letra => {
+    let btn = document.createElement("button");
+    btn.textContent = letra;
+
+    btn.onclick = () => {
+      entrada.value += letra;
+      entrada.focus();
+    };
+
+    teclado.appendChild(btn);
+  });
+}
+
+function salvarRanking() {
+  const nome = document.getElementById("nome").value;
+
+  if (!nome || nome.length < 2) {
+    alert("Digite um nome válido!");
+    return;
+  }
+
+  let ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+
+  ranking.push({
+    nome: nome,
+    pontos: pontos,
+    data: new Date().toLocaleDateString()
+  });
+
+  ranking.sort((a, b) => b.pontos - a.pontos);
+  ranking = ranking.slice(0, 5);
+
+  localStorage.setItem("ranking", JSON.stringify(ranking));
+  mostrarRanking();
+}
+
+function mostrarRanking() {
+  const rankingLista = document.getElementById("ranking");
+  rankingLista.innerHTML = "";
+
+  let ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+
+  ranking.forEach(jogador => {
+    let li = document.createElement("li");
+    li.textContent = `${jogador.nome} - ${jogador.pontos} pts (${jogador.data})`;
+    rankingLista.appendChild(li);
+  });
+}
+
+entrada.addEventListener("keypress", e => {
+  if (e.key === "Enter") enviar();
+});
+</script>
+
+</body>
+</html>
